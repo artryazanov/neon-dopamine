@@ -23,15 +23,15 @@ const GAME_PADDING = 50; // Extra padding for enemy spawning/despawning
 
 // Player Settings
 const PLAYER_RADIUS = 15;
-const PLAYER_SPEED_BASE = 250; // Pixels per second
+const PLAYER_SPEED_BASE = 100; // Pixels per second
 const PLAYER_FIRE_RATE_BASE = 0.2; // Seconds per shot
-const PLAYER_PROJECTILE_SPEED = 600; // Pixels per second
+const PLAYER_PROJECTILE_SPEED = 300; // Pixels per second
 const PLAYER_PROJECTILE_DAMAGE_BASE = 10;
 const PLAYER_MAX_HEALTH_BASE = 100;
 
 // Enemy Settings
-const ENEMY_SPAWN_INTERVAL_BASE = 1.5; // Seconds
-const ENEMY_SPEED_BASE = 80; // Pixels per second
+const ENEMY_SPAWN_INTERVAL_BASE = 3; // Seconds
+const ENEMY_SPEED_BASE = 50; // Pixels per second
 const ENEMY_HEALTH_BASE = 10;
 const ENEMY_RADIUS_BASE = 12;
 const ENEMY_XP_VALUE_BASE = 10;
@@ -127,6 +127,7 @@ class Player extends Entity {
         this.multiShot = 1; // Number of projectiles fired at once
         this.chainLightningChance = 0; // % chance
         this.novaAvailable = false;
+        this.projectilePierce = 0;
         this.level = 1;
         this.xp = 0;
         this.xpToNextLevel = 100;
@@ -168,7 +169,7 @@ class Player extends Entity {
                 angleOffset = (i - (this.multiShot - 1) / 2) * (spreadAngle / (this.multiShot - 1));
             }
             const finalAngle = baseAngle + angleOffset;
-            game.projectiles.push(new Projectile(
+            let proj = new Projectile(
                 this.x,
                 this.y,
                 5,
@@ -176,7 +177,9 @@ class Player extends Entity {
                 Math.cos(finalAngle) * PLAYER_PROJECTILE_SPEED,
                 Math.sin(finalAngle) * PLAYER_PROJECTILE_SPEED,
                 this.projectileDamage
-            ));
+            );
+            proj.pierce = this.projectilePierce;
+            game.projectiles.push(proj);
         }
     }
 
@@ -626,7 +629,7 @@ class Game {
             { name: 'Projectile Damage +15%', description: 'Increase projectile damage.', apply: () => this.player.projectileDamage = Math.floor(this.player.projectileDamage * 1.15) },
             { name: 'Movement Speed +15%', description: 'Increase player movement speed.', apply: () => this.player.speed = Math.floor(this.player.speed * 1.15) },
             { name: 'Max Health +25', description: 'Increase maximum health.', apply: () => { this.player.maxHealth += 25; this.player.health += 25; } },
-            { name: 'Projectile Pierce +1', description: 'Projectiles hit an additional enemy.', apply: () => this.player.projectiles.forEach(p => p.pierce++) },
+            { name: 'Projectile Pierce +1', description: 'Projectiles hit an additional enemy.', apply: () => this.player.projectilePierce++ },
             { name: 'Chain Lightning (5%)', description: 'Projectiles have a 5% chance to chain to a nearby enemy.', apply: () => this.player.chainLightningChance += 5 },
             { name: 'Giant Nova', description: 'Unleash a massive burst of energy around you (one time use).', apply: () => this.player.novaAvailable = true },
             { name: 'XP Gem Magnetism', description: 'Increase the range at which XP gems are pulled towards you.', apply: () => XP_GEM_PULL_SPEED *= 1.25 }
