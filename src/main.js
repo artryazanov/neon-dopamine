@@ -367,6 +367,7 @@ class Game {
         this.xpGems = [];
         this.lastSpawnTime = 0;
         this.enemySpawnInterval = ENEMY_SPAWN_INTERVAL_BASE;
+        this.isRunning = false;
     }
 
     init() {
@@ -377,10 +378,27 @@ class Game {
             mouseY = e.clientY;
         });
 
+        const startBtn = document.getElementById('start-btn');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                playSound(600, 'sine', 0.3, 0.3); // Start game sound
+                document.getElementById('start-screen').classList.remove('visible');
+                this.startGame();
+            });
+        }
+    }
+
+    startGame() {
+        if (this.isRunning) return;
         this.player = new Player(CANVAS.width / 2, CANVAS.height / 2);
         this.player.updateXPBar(); // Initialize XP bar display
+        this.isRunning = true;
 
-        this.gameLoop(0); // Start the game loop
+        // Use requestAnimationFrame to get a valid starting timestamp
+        requestAnimationFrame((t) => {
+            lastFrameTime = t;
+            this.gameLoop(t);
+        });
     }
 
     resizeCanvas() {
@@ -394,6 +412,8 @@ class Game {
     }
 
     gameLoop(currentTime) {
+        if (!this.isRunning) return;
+
         const deltaTime = (currentTime - lastFrameTime) / 1000; // Convert to seconds
         lastFrameTime = currentTime;
 
@@ -703,7 +723,8 @@ class Game {
 
     resetGame() {
         // Reset all game state
-        this.player = new Player(CANVAS.width / 2, CANVAS.height / 2);
+        this.isRunning = false;
+        this.player = null;
         this.enemies = [];
         this.projectiles = [];
         this.particles = [];
@@ -712,9 +733,15 @@ class Game {
         this.enemySpawnInterval = ENEMY_SPAWN_INTERVAL_BASE;
         gamePaused = false;
         screenShake.active = false;
+
         document.getElementById('level-up-overlay').classList.remove('visible');
-        this.player.updateXPBar(); // Update XP bar display
+        document.getElementById('start-screen').classList.add('visible');
         document.getElementById('level-text').textContent = `Level: 1`;
+        document.getElementById('xp-bar').style.width = '0%';
+
+        // Draw one clear frame to remove end-game clutter from menu background
+        CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);
+
         console.log("Game Reset!");
     }
 }
