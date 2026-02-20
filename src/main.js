@@ -34,7 +34,7 @@ const ENEMY_SPAWN_INTERVAL_BASE = 3; // Seconds
 const ENEMY_SPEED_BASE = 50; // Pixels per second
 const ENEMY_HEALTH_BASE = 10;
 const ENEMY_RADIUS_BASE = 12;
-const ENEMY_XP_VALUE_BASE = 10;
+const ENEMY_XP_VALUE_BASE = 20;
 const ELITE_SPAWN_CHANCE = 0.1; // 10%
 const ELITE_HEALTH_MULTIPLIER = 3;
 const ELITE_XP_MULTIPLIER = 5;
@@ -131,6 +131,30 @@ class Player extends Entity {
         this.level = 1;
         this.xp = 0;
         this.xpToNextLevel = 100;
+        this.updateHealthBar();
+    }
+
+    updateHealthBar() {
+        const hpFill = document.getElementById('hp-bar-fill');
+        const hpText = document.getElementById('hp-text');
+        const vignette = document.getElementById('damage-vignette');
+
+        if (hpFill && hpText) {
+            const progress = Math.max(0, (this.health / this.maxHealth) * 100);
+            hpFill.style.width = `${progress}%`;
+            hpText.textContent = `${Math.floor(this.health)} / ${this.maxHealth}`;
+
+            // Critical health styling
+            if (progress <= 30) {
+                hpFill.style.background = 'linear-gradient(90deg, #FF0000, #FF3300)';
+                hpFill.style.boxShadow = '0 0 15px #FF0000';
+                if (vignette) vignette.classList.add('critical-health');
+            } else {
+                hpFill.style.background = 'linear-gradient(90deg, #FF00FF, #FF1493)';
+                hpFill.style.boxShadow = '0 0 15px #FF00FF';
+                if (vignette) vignette.classList.remove('critical-health');
+            }
+        }
     }
 
     update(deltaTime) {
@@ -185,7 +209,19 @@ class Player extends Entity {
 
     takeDamage(amount) {
         this.health -= amount;
+        this.updateHealthBar();
         game.addParticles(this.x, this.y, PARTICLE_COUNT_HIT, COLOR_PARTICLE_HIT, 0.1); // White flash on hit
+
+        // Brief white flash on health bar for impact
+        const hpFill = document.getElementById('hp-bar-fill');
+        if (hpFill) {
+            const currentBg = hpFill.style.background;
+            hpFill.style.background = '#FFFFFF';
+            setTimeout(() => {
+                if (this.health > 0) this.updateHealthBar(); // Reset to normal colors
+            }, 100);
+        }
+
         playSound(80, 'square', 0.1, 0.2); // Player hit sound
         if (this.health <= 0) {
             // Game Over logic
@@ -202,14 +238,16 @@ class Player extends Entity {
             this.xpToNextLevel = Math.floor(this.xpToNextLevel * 1.25); // Scaling XP requirement
             game.levelUp();
         }
-        document.getElementById('level-text').textContent = `Level: ${this.level}`;
+        document.getElementById('level-text').textContent = `LVL ${this.level}`;
         this.updateXPBar();
     }
 
     updateXPBar() {
-        const xpBar = document.getElementById('xp-bar');
-        const progress = (this.xp / this.xpToNextLevel) * 100;
-        xpBar.style.width = `${progress}%`;
+        const xpBarFill = document.getElementById('xp-bar-fill');
+        const xpText = document.getElementById('xp-text');
+        const progress = Math.min(100, Math.max(0, (this.xp / this.xpToNextLevel) * 100));
+        if (xpBarFill) xpBarFill.style.width = `${progress}%`;
+        if (xpText) xpText.textContent = `${Math.floor(progress)}%`;
     }
 }
 
@@ -648,7 +686,7 @@ class Game {
             { name: 'Attack Speed +20%', description: 'Increase firing rate.', apply: () => this.player.fireRate *= 0.8 },
             { name: 'Projectile Damage +15%', description: 'Increase projectile damage.', apply: () => this.player.projectileDamage = Math.floor(this.player.projectileDamage * 1.15) },
             { name: 'Movement Speed +15%', description: 'Increase player movement speed.', apply: () => this.player.speed = Math.floor(this.player.speed * 1.15) },
-            { name: 'Max Health +25', description: 'Increase maximum health.', apply: () => { this.player.maxHealth += 25; this.player.health += 25; } },
+            { name: 'Max Health +25', description: 'Increase maximum health.', apply: () => { this.player.maxHealth += 25; this.player.health += 25; this.player.updateHealthBar(); } },
             { name: 'Projectile Pierce +1', description: 'Projectiles hit an additional enemy.', apply: () => this.player.projectilePierce++ },
             { name: 'Chain Lightning (5%)', description: 'Projectiles have a 5% chance to chain to a nearby enemy.', apply: () => this.player.chainLightningChance += 5 },
             { name: 'Giant Nova', description: 'Unleash a massive burst of energy around you (one time use).', apply: () => this.player.novaAvailable = true },
@@ -736,8 +774,14 @@ class Game {
 
         document.getElementById('level-up-overlay').classList.remove('visible');
         document.getElementById('start-screen').classList.add('visible');
-        document.getElementById('level-text').textContent = `Level: 1`;
-        document.getElementById('xp-bar').style.width = '0%';
+        document.getElementById('level-text').textContent = `LVL 1`;
+        const xpBarFill = document.getElementById('xp-bar-fill');
+        if (xpBarFill) xpBarFill.style.width = '0%';
+        const xpText = document.getElementById('xp-text');
+        if (xpText) xpText.textContent = `0%`;
+
+        const vignette = document.getElementById('damage-vignette');
+        if (vignette) vignette.classList.remove('critical-health');
 
         // Draw one clear frame to remove end-game clutter from menu background
         CTX.clearRect(0, 0, CANVAS.width, CANVAS.height);

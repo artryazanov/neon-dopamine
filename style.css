@@ -30,38 +30,116 @@ canvas {
     z-index: 100;
 }
 
-#xp-bar-container {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 300px;
-    height: 15px;
-    background-color: rgba(0, 0, 0, 0.7);
-    border: 1px solid #00FFFF;
-    border-radius: 5px;
-    overflow: hidden;
-    box-shadow: 0 0 8px #00FFFF;
-}
-
-#xp-bar {
+#damage-vignette {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    width: 0%;
-    background-color: #39FF14;
-    /* Lime */
-    box-shadow: 0 0 5px #39FF14;
-    transition: width 0.1s ease-out;
+    pointer-events: none;
+    z-index: 50;
+    /* Below UI but above canvas */
+    background: radial-gradient(circle, transparent 60%, rgba(255, 0, 0, 0.4) 100%);
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
-#level-text {
+@keyframes pulseVignette {
+    0% {
+        opacity: 0.2;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+
+    100% {
+        opacity: 0.2;
+    }
+}
+
+.critical-health {
+    animation: pulseVignette 1s infinite;
+}
+
+.ui-container {
     position: absolute;
     top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 100;
+}
+
+.top-left {
+    left: 30px;
+}
+
+.top-right {
+    right: 30px;
+}
+
+.ui-label {
+    font-size: 2em;
+    font-weight: 900;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    align-items: center;
+}
+
+.label-hp {
+    color: #FF00FF;
+    text-shadow: 0 0 10px #FF00FF, 0 0 20px #FF00FF;
+}
+
+.label-xp {
+    color: #39FF14;
+    text-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;
+}
+
+.ui-bar-bg {
+    width: 250px;
+    height: 25px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #00FFFF;
+    box-shadow: 0 0 10px #00FFFF, inset 0 0 10px #00FFFF;
+    border-radius: 4px;
+    /* Slightly sharp edges for synthwave */
+    position: relative;
+    transform: skewX(-15deg);
+    /* Cyberpunk/Synthwave slant */
+    overflow: hidden;
+}
+
+.ui-bar-fill {
+    height: 100%;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hp-fill-color {
+    width: 100%;
+    background: linear-gradient(90deg, #FF00FF, #FF1493);
+    box-shadow: 0 0 15px #FF00FF;
+}
+
+.xp-fill-color {
+    width: 0%;
+    background: linear-gradient(90deg, #39FF14, #00FF00);
+    box-shadow: 0 0 15px #39FF14;
+}
+
+.ui-bar-text {
+    position: absolute;
+    top: 50%;
     left: 50%;
-    transform: translateX(180px);
-    /* Position to the right of the XP bar */
-    color: #00FFFF;
+    transform: translate(-50%, -50%) skewX(15deg);
+    /* Un-skew the text */
+    color: #E0FFFF;
+    font-family: 'Courier New', Courier, monospace;
     font-size: 1.2em;
-    text-shadow: 0 0 5px #00FFFF;
+    font-weight: bold;
+    text-shadow: 2px 2px 0px #000, 0 0 10px #FF00FF;
+    white-space: nowrap;
 }
 
 #level-up-overlay {
